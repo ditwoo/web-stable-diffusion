@@ -55,8 +55,8 @@ def generate_image(prompt: str, iterations: int = 50, seed: int = 123, nsfw: boo
 
 @app.get("/generate", response_class=StreamingResponse)
 async def generate(
-    prompt: str = "prompt",
-    seed: int = 123,
+    prompt: str = "cat in the forest",
+    seed: int = 42,
     iterations: int = 50,
     nsfw: bool = True,
 ):

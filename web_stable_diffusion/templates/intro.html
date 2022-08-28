@@ -21,23 +21,43 @@
 
                 <form>
                     <div class="row g-6">
-                        <label for="promptInput" class="form-label">Prompt</label>
-                        <input type="text" class="form-control" id="promptInput" aria-describedby="promptHelp">
+                        <div class="col">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="promptInput" aria-describedby="promptHelp"
+                                    value="cat in the forest">
+                                <label for="promptInput" class="form-label">Prompt</label>
+                            </div>
+                        </div>
                     </div>
+
+                    <br>
 
                     <div class="row g-6">
-                        <label for="iterationsInput" class="form-label">Iterations</label>
-                        <input type="number" class="form-control" id="iterationsInput" value="50">
+                        <div class="col">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="iterationsInput" value="50">
+                                <label for="iterationsInput" class="form-label">Iterations</label>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="seedInput" value="42">
+                                <label for="seedInput" class="form-label">Manual seed</label>
+                            </div>
+                        </div>
+
                     </div>
+
+                    <br>
 
                     <div class="row g-6">
-                        <label for="seedInput" class="form-label">Manual seed</label>
-                        <input type="number" class="form-control" id="seedInput" value="123">
-                    </div>
-
-                    <div class="mb-6 form-check">
-                        <input type="checkbox" class="form-check-input" id="enableNSFW" checked>
-                        <label class="form-check-label" for="enableNSFW">Filter NSFW content</label>
+                        <div class="col">
+                            <div class="mb-6 form-check">
+                                <input type="checkbox" class="form-check-input" id="enableNSFW" checked>
+                                <label class="form-check-label" for="enableNSFW">Filter NSFW content</label>
+                            </div>
+                        </div>
                     </div>
 
                     <hr class="my-4">
