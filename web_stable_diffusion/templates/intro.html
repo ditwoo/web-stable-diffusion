@@ -1,0 +1,105 @@
+<html>
+
+<head>
+    <title>Stable diffusion</title>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body class="bg-light">
+    <div class="container">
+        <main>
+
+            <div class="py-5 text-center">
+                <h2>Stable Diffusion</h2>
+                <p class="lead">Type some text in prompt area and see a generated image.</p>
+            </div>
+
+            <div class="mb-3">
+                <h4 class="m3">Diffusion settings</h4>
+
+                <form>
+                    <div class="row g-6">
+                        <label for="promptInput" class="form-label">Prompt</label>
+                        <input type="text" class="form-control" id="promptInput" aria-describedby="promptHelp">
+                    </div>
+
+                    <div class="row g-6">
+                        <label for="iterationsInput" class="form-label">Iterations</label>
+                        <input type="number" class="form-control" id="iterationsInput" value="50">
+                    </div>
+
+                    <div class="row g-6">
+                        <label for="seedInput" class="form-label">Manual seed</label>
+                        <input type="number" class="form-control" id="seedInput" value="123">
+                    </div>
+
+                    <div class="mb-6 form-check">
+                        <input type="checkbox" class="form-check-input" id="enableNSFW" checked>
+                        <label class="form-check-label" for="enableNSFW">Filter NSFW content</label>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="col-md-12 text-center">
+                        <button type="button" class="w-50 btn btn-primary btn-lg" id="diffusionSubmit">Submit</button>
+                    </div>
+                </form>
+
+                <div class="py-5 text-center">
+                    <div class="d-block mx-auto mb-4">
+                        <img src="{{ url_for('static', path='images/default.png') }}" height="512" width="512"
+                            id="resultingImage">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        function diffuse() {
+            var prompt_str = $('#promptInput').val();
+            var iterations = $('#iterationsInput').val();
+            var seed = $('#seedInput').val();
+            var nsfw_flag = $("#enableNSFW").is(":checked");
+
+            $("#resultingImage").attr(
+                'src',
+                "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag
+            );
+
+
+        }
+
+        $("#diffusionSubmit").click(function (e) {
+            e.preventDefault();
+
+            var prompt_str = $('#promptInput').val();
+            var iterations = $('#iterationsInput').val();
+            var seed = $('#seedInput').val();
+            var nsfw_flag = $("#enableNSFW").is(":checked");
+
+            $.ajax({
+                beforeSend: function (xhr, opts) {
+                    $("#resultingImage").attr('src', 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921');
+                },
+                success: function () {
+                    $("#resultingImage").attr(
+                        'src',
+                        "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag
+                    );
+                },
+                complete: function () {
+                    $("#resultingImage").attr('height', 512);
+                    $("#resultingImage").attr('width', 512);
+                }
+            });
+        });
+    </script>
+
+
+</body>
+
+
+</html>
