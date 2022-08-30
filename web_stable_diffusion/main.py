@@ -1,7 +1,6 @@
 import io
 import pathlib
 
-from PIL import Image
 import torch
 
 from fastapi import FastAPI, Request
@@ -10,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 
-from diffuse import NSFW_Enabled_DiffusionPipeline
+from diffuse import CustomDiffusionPipeline, generate_image
 
 
 BASE_DIR = pathlib.Path(__file__).resolve().parent
@@ -25,6 +24,7 @@ device = "cpu" if not torch.cuda.is_available() else "cuda"
 fp16 = False
 auth = True
 
+
 @app.on_event("startup")
 async def startup_event():
     global pipe
@@ -37,20 +37,14 @@ async def startup_event():
     if auth:
         kwargs["use_auth_token"] = True
 
-    pipe = NSFW_Enabled_DiffusionPipeline.from_pretrained(model_id, **kwargs)
+    pipe = CustomDiffusionPipeline.from_pretrained(model_id, **kwargs)
+    pipe.eval()
     pipe.to(device)
 
 
 @app.get("/", response_class=HTMLResponse)
 async def intro(request: Request):
     return templates.TemplateResponse("intro.html", {"request": request})
-
-
-def generate_image(prompt: str, iterations: int = 50, seed: int = 123, nsfw: bool = True) -> Image:
-    with torch.autocast(device):
-        generator = torch.Generator(device).manual_seed(seed)
-        images = pipe(prompt, num_inference_steps=iterations, generator=generator, nsfw=nsfw)["sample"]
-    return images[0]
 
 
 @app.get("/generate", response_class=StreamingResponse)
@@ -60,13 +54,11 @@ async def generate(
     iterations: int = 50,
     nsfw: bool = True,
 ):
-    img = generate_image(prompt, iterations, seed, nsfw)
+    global pipe, device
+    img = generate_image(pipe, device, prompt, iterations, seed, nsfw)
     imgio = io.BytesIO()
     img.save(imgio, "JPEG", quality=100)
     imgio.seek(0)
     return StreamingResponse(
-        imgio,
-        media_type="image/jpeg",
-        headers={"Content-Disposition": 'inline; filename="diffusion.jpg"'},
+        imgio, media_type="image/jpeg", headers={"Content-Disposition": 'inline; filename="diffusion.jpg"'}
     )
-

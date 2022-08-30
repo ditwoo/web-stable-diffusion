@@ -5,13 +5,14 @@ from typing import List, Optional, Union
 
 from tqdm.auto import tqdm
 import torch
+from PIL import Image
 
 
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline, StableDiffusionPipeline
 from diffusers.schedulers import LMSDiscreteScheduler
 
-class NSFW_Enabled_DiffusionPipeline(StableDiffusionPipeline):
 
+class CustomDiffusionPipeline(StableDiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
@@ -131,8 +132,8 @@ class NSFW_Enabled_DiffusionPipeline(StableDiffusionPipeline):
         image = (image / 2 + 0.5).clamp(0, 1)
         image = image.cpu().permute(0, 2, 3, 1).numpy()
 
+        # run safety checker
         if nsfw:
-            # run safety checker
             safety_cheker_input = self.feature_extractor(self.numpy_to_pil(image), return_tensors="pt").to(self.device)
             image, has_nsfw_concept = self.safety_checker(images=image, clip_input=safety_cheker_input.pixel_values)
         else:
@@ -142,3 +143,20 @@ class NSFW_Enabled_DiffusionPipeline(StableDiffusionPipeline):
             image = self.numpy_to_pil(image)
 
         return {"sample": image, "nsfw_content_detected": has_nsfw_concept}
+
+
+def generate_image(
+    pipeline: DiffusionPipeline,
+    device: Union[str, torch.device],
+    prompt: str,
+    iterations: int = 50,
+    initial_seed: int = 42,
+    nsfw: bool = True,
+) -> Image:
+    if pipeline is None:
+        raise RuntimeError("Got uninitialized pipeline!")
+
+    with torch.autocast(device):
+        generator = torch.Generator(device).manual_seed(initial_seed)
+        images = pipeline(prompt, num_inference_steps=iterations, generator=generator, nsfw=nsfw)["sample"]
+    return images[0]
