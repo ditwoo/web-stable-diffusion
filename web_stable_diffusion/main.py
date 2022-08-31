@@ -38,7 +38,6 @@ async def startup_event():
         kwargs["use_auth_token"] = True
 
     pipe = CustomDiffusionPipeline.from_pretrained(model_id, **kwargs)
-    pipe.eval()
     pipe.to(device)
 
 
