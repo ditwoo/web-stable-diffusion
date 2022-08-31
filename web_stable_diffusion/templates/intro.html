@@ -2,7 +2,7 @@
 
 <head>
     <title>Stable diffusion</title>
-    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-3.6.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
@@ -63,7 +63,8 @@
                     <hr class="my-4">
 
                     <div class="col-md-12 text-center">
-                        <button type="button" class="w-50 btn btn-primary btn-lg" id="diffusionSubmit">Submit</button>
+                        <button type="button" class="w-50 btn btn-primary btn-lg" id="diffusionSubmit"
+                            onclick="diffuse()">Submit</button>
                     </div>
                 </form>
 
@@ -84,38 +85,20 @@
             var seed = $('#seedInput').val();
             var nsfw_flag = $("#enableNSFW").is(":checked");
 
-            $("#resultingImage").attr(
-                'src',
-                "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag
-            );
+            // show scroll
+            $("#resultingImage").attr('src', 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921');
 
+            // get request to backend
+            var endpoint = "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag;
+            var window_url = window.URL || window.webkitURL;
 
-        }
-
-        $("#diffusionSubmit").click(function (e) {
-            e.preventDefault();
-
-            var prompt_str = $('#promptInput').val();
-            var iterations = $('#iterationsInput').val();
-            var seed = $('#seedInput').val();
-            var nsfw_flag = $("#enableNSFW").is(":checked");
-
-            $.ajax({
-                beforeSend: function (xhr, opts) {
-                    $("#resultingImage").attr('src', 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921');
-                },
-                success: function () {
-                    $("#resultingImage").attr(
-                        'src',
-                        "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag
-                    );
-                },
-                complete: function () {
-                    $("#resultingImage").attr('height', 512);
-                    $("#resultingImage").attr('width', 512);
-                }
+            fetch(endpoint).then(response => response.blob()).then(blob => {
+                var imageUrl = window_url.createObjectURL(blob);
+                $("#resultingImage").attr('src', imageUrl);
+                $("#resultingImage").attr('height', 512);
+                $("#resultingImage").attr('width', 512);
             });
-        });
+        };
     </script>
 
 
