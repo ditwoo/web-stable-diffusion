@@ -86,7 +86,10 @@
             var nsfw_flag = $("#enableNSFW").is(":checked");
 
             // show scroll
-            $("#resultingImage").attr('src', 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921');
+            var resImage = document.getElementById("resultingImage");
+            resImage.src = 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif?20151024034921';
+            resImage.removeAttribute("height");
+            resImage.removeAttribute("width");
 
             // get request to backend
             var endpoint = "/generate?prompt=" + prompt_str + "&iterations=" + iterations + "&seed=" + seed + "&nsfw=" + nsfw_flag;
@@ -94,9 +97,10 @@
 
             fetch(endpoint).then(response => response.blob()).then(blob => {
                 var imageUrl = window_url.createObjectURL(blob);
-                $("#resultingImage").attr('src', imageUrl);
-                $("#resultingImage").attr('height', 512);
-                $("#resultingImage").attr('width', 512);
+
+                resImage.src = imageUrl;
+                resImage.height = 512;
+                resImage.width = 512;
             });
         };
     </script>
