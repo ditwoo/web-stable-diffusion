@@ -1,34 +1,15 @@
-import io
-import pathlib
+import time
 
 import torch
-
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
+import numpy as np
+import streamlit as st
+from PIL import Image
 
 from diffuse import CustomDiffusionPipeline, generate_image
 
 
-BASE_DIR = pathlib.Path(__file__).resolve().parent
-
-app = FastAPI(docs_url="/docs")
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-
-# inference parameters
-pipe = None
-device = "cpu" if not torch.cuda.is_available() else "cuda"
-fp16 = False
-auth = True
-
-
-@app.on_event("startup")
-async def startup_event():
-    global pipe
-
+def init_pipeline(device, fp16=False, auth=True):
+    kwargs = {}
     model_id = "CompVis/stable-diffusion-v1-4"
     kwargs = {}
     if fp16:
@@ -38,27 +19,38 @@ async def startup_event():
         kwargs["use_auth_token"] = True
 
     pipe = CustomDiffusionPipeline.from_pretrained(model_id, **kwargs)
-    pipe.eval()
     pipe.to(device)
+    return pipe
 
 
-@app.get("/", response_class=HTMLResponse)
-async def intro(request: Request):
-    return templates.TemplateResponse("intro.html", {"request": request})
+# inference parameters
+DEVICE = "cpu" if not torch.cuda.is_available() else "cuda"
+PIPE = init_pipeline(DEVICE, fp16=False, auth=True)
 
 
-@app.get("/generate", response_class=StreamingResponse)
-async def generate(
-    prompt: str = "cat in the forest",
-    seed: int = 42,
-    iterations: int = 50,
-    nsfw: bool = True,
-):
-    global pipe, device
-    img = generate_image(pipe, device, prompt, iterations, seed, nsfw)
-    imgio = io.BytesIO()
-    img.save(imgio, "JPEG", quality=100)
-    imgio.seek(0)
-    return StreamingResponse(
-        imgio, media_type="image/jpeg", headers={"Content-Disposition": 'inline; filename="diffusion.jpg"'}
-    )
+def main():
+    with st.form(key="request"):
+        st.write(
+            """
+    #  Stable Diffusion
+    Type some text in prompt area and see a generated image.
+    """
+        )
+
+        prompt = st.text_area("Prompt", value="cat with a red hat in a forest", key="prompt")
+        left_column, right_column = st.columns(2)
+        with left_column:
+            iterations = int(st.text_input("Iterations", value=50, key="iterations"))
+        with right_column:
+            seed = int(st.text_input("Random seed", value=42, key="seed"))
+        nsfw = st.checkbox("Filter NSFW content", value=True, key="nsfw")
+        st.form_submit_button("Submit")
+
+        if prompt:
+            print(prompt, iterations, seed, nsfw)
+            image = generate_image(PIPE, DEVICE, prompt=prompt, iterations=iterations, initial_seed=seed, nsfw=nsfw)
+            st.image(image, use_column_width=True)
+
+
+if __name__ == "__main__":
+    main()
